@@ -8,19 +8,10 @@
 #include "sdkconfig.h"
 #include "lvgl.h"
 #include "driver/i2c.h"
-#include "driver/i2s_std.h"
 #include "driver/gpio.h"
 #include "driver/ledc.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-
-#include "driver/i2s_std.h"
-
-#define I2S_BCLK_GPIO   36
-#define I2S_LRCK_GPIO   35
-#define I2S_DOUT_GPIO   37
-
-static i2s_chan_handle_t i2s_tx_chan;
 
 #ifndef PI
 #define PI  (3.14159f)
@@ -47,9 +38,6 @@ LV_IMG_DECLARE(esp_logo);
 LV_IMG_DECLARE(esp_text);
 #endif
 
-#define I2S_BCLK_GPIO  GPIO_NUM_36
-#define I2S_LRCK_GPIO  GPIO_NUM_35
-#define I2S_DOUT_GPIO  GPIO_NUM_37
 
 typedef struct {
     lv_obj_t *scr;
@@ -297,7 +285,7 @@ static void start_animation(lv_obj_t *scr)
 void example_lvgl_demo_ui(lv_disp_t *disp)
 
 {
-    gpio10_high_init();
+    
     lv_obj_t *scr = lv_disp_get_scr_act(disp);
 
     img_logo = lv_img_create(scr);
@@ -306,10 +294,16 @@ void example_lvgl_demo_ui(lv_disp_t *disp)
 #else
     lv_img_set_src(img_logo, &esp_logo);
 #endif
+    lv_obj_align(img_logo, LV_ALIGN_CENTER, 0, 0); // 居中显示
 
-    backlight_init();      
+    // // ===================== 加一个固定文字 =====================
+    // lv_obj_t *label = lv_label_create(scr);
+    // lv_label_set_text(label, "SCREEN IS WORKING");
+    // lv_obj_align(label, LV_ALIGN_BOTTOM_MID, 0, -20);
+    backlight_init();    
+    gpio10_high_init();  //点灯
     touch_init();
-    create_vertical_slider(scr);   // 右边：图片
+    create_vertical_slider(scr);   
     create_slider_pwm_left(scr);   
     start_animation(scr);
 }

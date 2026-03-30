@@ -20,7 +20,7 @@
 #include "driver/gpio.h"
 #include "lvgl.h"
 #include "driver/ledc.h"
-
+#include <math.h>
 static const char *TAG = "example";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,6 +69,9 @@ static const char *TAG = "example";
 #define BL_LEDC_TIMER         LEDC_TIMER_0
 
 void wifi_init(void);
+void audio_i2s_init(void);
+void audio_play_test_tone(void);
+void audio_start_playback(void);
 // 全局亮度
 static uint8_t s_brightness = 80;  // 初始 80%
 static lv_obj_t *bar_brightness;
@@ -118,6 +121,7 @@ static void example_lvgl_port_task(void *arg)
         // in case of lvgl display not ready yet
         time_till_next_ms = MIN(time_till_next_ms, EXAMPLE_LVGL_TASK_MAX_DELAY_MS);
         vTaskDelay(pdMS_TO_TICKS(time_till_next_ms));
+        //ESP_LOGI(TAG, "LVGL alive, time_till_next_ms: %d", time_till_next_ms);
     }
 }
 
@@ -164,7 +168,7 @@ void example_init_i80_bus(esp_lcd_panel_io_handle_t *io_handle)
     ESP_LOGI(TAG, "Initialize Intel 8080 bus");
     esp_lcd_i80_bus_handle_t i80_bus = NULL;
     esp_lcd_i80_bus_config_t bus_config = {
-        .clk_src = LCD_CLK_SRC_DEFAULT,
+        .clk_src = LCD_CLK_SRC_PLL160M,
         .dc_gpio_num = EXAMPLE_PIN_NUM_DC,
         .wr_gpio_num = EXAMPLE_PIN_NUM_PCLK,
         .data_gpio_nums = {
@@ -414,8 +418,12 @@ void app_main(void)
     ESP_LOGI(TAG, "Display LVGL animation");
     // Lock the mutex due to the LVGL APIs are not thread-safe
     _lock_acquire(&lvgl_api_lock);
-    
     example_lvgl_demo_ui(display);
-    wifi_init();
     _lock_release(&lvgl_api_lock);
+    wifi_init();
+
+    // 初始化音频
+    audio_i2s_init();
+    audio_start_playback(); 
+
 }
